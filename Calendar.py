@@ -8,6 +8,7 @@ import calendar
 from client.app_utils import getTimezone
 from dateutil import tz
 from dateutil import parser
+from dateutil.relativedelta import relativedelta
 from apiclient.discovery import build
 from oauth2client.file import Storage
 from oauth2client.client import AccessTokenRefreshError
@@ -23,156 +24,190 @@ client_id = 'xxxxxxxx.apps.googleusercontent.com'
 client_secret = 'xxxxxxxxxxxxxx'
 
 monthDict = {'January': '01', 
-		'February': '02',
-		'March': '03',
-		'April': '04',
-		'May': '05',
-		'June': '06',
-		'July': '07',
-		'August': '08',
-		'September': '09',
-		'October': '10',
-		'November': '11',
-		'December': '12'}
+        'February': '02',
+        'March': '03',
+        'April': '04',
+        'May': '05',
+        'June': '06',
+        'July': '07',
+        'August': '08',
+        'September': '09',
+        'October': '10',
+        'November': '11',
+        'December': '12'}
 
 # The scope URL for read/write access to a user's calendar data
 scope = 'https://www.googleapis.com/auth/calendar'
 if bool(re.search('--noauth_local_webserver', str(sys.argv), re.IGNORECASE)):
-	argv = FLAGS(sys.argv[1])
+    argv = FLAGS(sys.argv[1])
 
 def convertDateToGoogleStr(timezone, d):
-	dateStr = timezone.normalize(timezone.localize(d)).astimezone(tz.tzutc()).isoformat('T')
-	return dateStr
+    dateStr = timezone.normalize(timezone.localize(d)).astimezone(tz.tzutc()).isoformat('T')
+    return dateStr
 
 def getStartOfDay( dayOfInterest ):
-	return datetime.datetime(dayOfInterest.year, dayOfInterest.month, dayOfInterest.day )
+    return datetime.datetime(dayOfInterest.year, dayOfInterest.month, dayOfInterest.day )
 
 def getEndOfDay(dayOfInterest):
-	return getStartOfDay(dayOfInterest) + datetime.timedelta(days=1, minutes=-1 )
+    return getStartOfDay(dayOfInterest) + datetime.timedelta(days=1, minutes=-1 )
 
 def convertGoogleDateStr( dateStr, tz ):
-	date = parser.parse(dateStr)
-	return date.astimezone( tz )
+    date = parser.parse(dateStr)
+    return date.astimezone( tz )
 
 
 def addEvent(profile, mic):
 
-	while True:
-		try:
-			mic.say("What would you like to add?")
-			eventData = mic.activeListen()
-			createdEvent = service.events().quickAdd(calendarId='primary', text=eventData).execute()
-			eventRawStartTime = createdEvent['start']
+    while True:
+        try:
+            mic.say("What would you like to add?")
+            eventData = mic.activeListen()
+            createdEvent = service.events().quickAdd(calendarId='primary', text=eventData).execute()
+            eventRawStartTime = createdEvent['start']
 
-			m = re.search('([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})', str(eventRawStartTime))
-			eventDateYear = str(m.group(1))
-			eventDateMonth = str(m.group(2))
-			eventDateDay = str(m.group(3))
-			eventTimeHour = str(m.group(4))
-			eventTimeMinute =  str(m.group(5))
-			appendingTime = "am"
+            m = re.search('([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})', str(eventRawStartTime))
+            eventDateYear = str(m.group(1))
+            eventDateMonth = str(m.group(2))
+            eventDateDay = str(m.group(3))
+            eventTimeHour = str(m.group(4))
+            eventTimeMinute =  str(m.group(5))
+            appendingTime = "am"
 
-			if len(eventTimeMinute) == 1:
-				eventTimeMinute = eventTimeMinute + "0"
+            if len(eventTimeMinute) == 1:
+                eventTimeMinute = eventTimeMinute + "0"
 
-			eventTimeHour = int(eventTimeHour)
+            eventTimeHour = int(eventTimeHour)
 
-			if ((eventTimeHour - 12) > 0 ):
-					eventTimeHour = eventTimeHour - 12
-					appendingTime = "pm"
+            if ((eventTimeHour - 12) > 0 ):
+                    eventTimeHour = eventTimeHour - 12
+                    appendingTime = "pm"
 
-			dictKeys = [ key for key, val in monthDict.items() if val==eventDateMonth ]
-			eventDateMonth = dictKeys[0]
-			mic.say("Added event " + createdEvent['summary'] + " on " + str(eventDateMonth) + " " + str(eventDateDay) + " at " + str(eventTimeHour) + ":" + str(eventTimeMinute) + " " + appendingTime)
-			mic.say("Is this what you wanted?")
-			userResponse = mic.activeListen()
+            dictKeys = [ key for key, val in monthDict.items() if val==eventDateMonth ]
+            eventDateMonth = dictKeys[0]
+            mic.say("Added event " + createdEvent['summary'] + " on " + str(eventDateMonth) + " " + str(eventDateDay) + " at " + str(eventTimeHour) + ":" + str(eventTimeMinute) + " " + appendingTime)
+            mic.say("Is this what you wanted?")
+            userResponse = mic.activeListen()
 
-			if bool(re.search('Yes', userResponse, re.IGNORECASE)):
-				mic.say("Okay, I added it to your calendar")
-				return
+            if bool(re.search('Yes', userResponse, re.IGNORECASE)):
+                mic.say("Okay, I added it to your calendar")
+                return
 
-			service.events().delete(calendarId='primary', eventId=createdEvent['id']).execute()
+            service.events().delete(calendarId='primary', eventId=createdEvent['id']).execute()
 
-		except KeyError:
+        except KeyError:
 
-			mic.say("Could not add event to your calender; check if internet issue.")
-			mic.say("Would you like to attempt again?")
-			responseRedo = mic.activeListen()
+            mic.say("Could not add event to your calender; check if internet issue.")
+            mic.say("Would you like to attempt again?")
+            responseRedo = mic.activeListen()
 
-			if bool(re.search(r'\bNo\b', responseRedo, re.IGNORECASE)):
-				return
+            if bool(re.search(r'\bNo\b', responseRedo, re.IGNORECASE)):
+                return
 
+#gets all events today
 def getEventsToday(profile, mic):
-	tz = getTimezone(profile)
-	d = datetime.datetime.now(tz=tz)
-	getEventsOn(d, tz, mic, "today")
+    tz = getTimezone(profile)
+    d = datetime.datetime.now(tz=tz)
+    getEventsOn(d, tz, mic, "today")
 
+#gets all events tomorrow
 def getEventsTomorrow(profile, mic):
-	tz = getTimezone(profile)
-	d = datetime.datetime.now(tz=tz) + datetime.timedelta(days=1)
-	getEventsOn(d, tz, mic, "tomorrow")
+    tz = getTimezone(profile)
+    d = datetime.datetime.now(tz=tz) + datetime.timedelta(days=1)
+    getEventsOn(d, tz, mic, "tomorrow")
 
+#gets all events on the provided next day of week (Monday, Tuesday, etc..)
 def getEventsOnNextDayOfWeek(profile, mic, dayOfWeekStr ):
-	tz = getTimezone(profile)
-	d = datetime.datetime.now(tz=tz);
-	dayOfWeek = list(calendar.day_name).index(dayOfWeekStr)
-	if ( dayOfWeek == d.weekday() ):
-		timediff = datetime.timedelta(days=7)
-	elif ( dayOfWeek <= d.weekday() ):
-		timediff = datetime.timedelta(days=(7-dayOfWeek))
-	else:
-		timediff = datetime.timedelta(days=(dayOfWeek-d.weekday()))
-	getEventsOn(d+timediff, tz, mic, "next " + dayOfWeekStr)
+    tz = getTimezone(profile)
+    d = datetime.datetime.now(tz=tz)
+    dayOfWeek = list(calendar.day_name).index(dayOfWeekStr)
+    if ( dayOfWeek == d.weekday() ):
+        timediff = datetime.timedelta(days=7)
+    elif ( dayOfWeek <= d.weekday() ):
+        timediff = datetime.timedelta(days=(7-dayOfWeek))
+    else:
+        timediff = datetime.timedelta(days=(dayOfWeek-d.weekday()))
+    getEventsOn(d+timediff, tz, mic, "next " + dayOfWeekStr)
 
-
+#gets all events on the provided day
 def getEventsOn( day, tz, mic, keyword ):
+    events = queryEvents(convertDateToGoogleStr(tz, getStartOfDay(day)), convertDateToGoogleStr(tz, getEndOfDay(day)))
+    if(len(events) == 0):
+        mic.say(  "You have no events scheduled for " + keyword )
+        return
+    sep=""
+    for event in events:
+        eventTitle = getSummaryFromEvent(event)
+        mic.say( sep + eventTitle + getReadableTimeFromEvent(event,tz) )
+        sep = "and "
 
-	dayStartTime = convertDateToGoogleStr(tz, getStartOfDay(day))
-	dayEndTime = convertDateToGoogleStr(tz, getEndOfDay(day))
+#gets all events in the next month that contain keywords
+def getEventsBySummary( profile, mic, keyWords ):
+    tz = getTimezone(profile)
+    today = getStartOfDay(datetime.datetime.now(tz=tz))
+    oneMonthFromToday = today + relativedelta(months=1)
+    events = queryEvents(convertDateToGoogleStr(tz, today), convertDateToGoogleStr(tz, oneMonthFromToday), keyWords)
 
-	page_token = None
+    if len(events) == 0:
+        mic.say("You don't have any events like that")
+        return
+    sep=""
+    for event in events:
+        eventTitle = getSummaryFromEvent(event)
+        mic.say(  sep + " on " + getReadableDateFromEvent(event, tz) + " " + eventTitle + getReadableTimeFromEvent(event, tz) )
+        sep="and"
 
-	while True:
-		# Gets events from primary calender from each page in present day boundaries
-		events = service.events().list(calendarId='primary', pageToken=page_token, timeMin=dayStartTime, timeMax=dayEndTime).execute()
+#returns a readable title from Google event
+def getSummaryFromEvent(event):
+    if 'summary' in event:
+        return str(event['summary'])
+    return "An Event"
 
-		if(len(events['items']) == 0):
-			mic.say(  "You have no events scheduled for " + keyword )
-			return
+#returns a readable date phrase from Google event
+def getReadableDateFromEvent(event, tz):
+    eventRawStartTime = event['start']
+    if "dateTime" in eventRawStartTime:
+        date = convertGoogleDateStr(eventRawStartTime['dateTime'], tz)
+    else:
+        date = eventRawStartTime['date'].split("-")
+        date = datetime.datetime(year=int(date[0]), month=int(date[1]), day=int(date[2]), tzinfo=tz)
+    #if it's with 7 days, say the name of day
+    if (date - datetime.datetime.now(tz=tz)).days <= 7:
+        return " next " + calendar.day_name[date.weekday()]
+    #else return Month, Day Number
+    return calendar.month_name[date.month] + " " + str(date.day)
 
-		sep = ""
-		for event in events['items']:
-			try:
-				if 'summary' in event:
-					eventTitle = str(event['summary'])
-				else:
-					eventTitle = "An Event"
-				eventRawStartTime = event['start']
-				if "dateTime" in eventRawStartTime:
-					eventDate = convertGoogleDateStr(eventRawStartTime['dateTime'], tz)
-					startMinute = ":" + str(eventDate.minute)
-					startHour = eventDate.hour
-					appendingTime = "am"
-					if ((eventDate.hour - 12) > 0 ):
-						startHour = eventDate.hour - 12
-						appendingTime = "pm"
-					if eventDate.minute == 0:
-						startMinute = ""
-					elif (eventDate.minute < 10):
-						startMinute = " oh " + str(eventDate.minute)
-					phrase = sep + eventTitle + " at " + str(startHour) +  startMinute + " " + appendingTime
-				else:
-					phrase = sep + eventTitle + " all day"
-				mic.say( phrase )
-				sep = "and "
-			except KeyError, e:
-				print( e )
-				mic.say("You have something listed but I cannot read it.")
+#returns a readable time phrase from Google event
+def getReadableTimeFromEvent(event, tz):
+    eventRawStartTime = event['start']
+    if "dateTime" in eventRawStartTime:
+        date = convertGoogleDateStr(eventRawStartTime['dateTime'], tz)
+        startMinute = ":" + str(date.minute)
+        startHour = date.hour
+        appendingTime = "am"
+        if ((date.hour - 12) > 0 ):
+            startHour = date.hour - 12
+            appendingTime = "pm"
+        if date.minute == 0:
+            startMinute = ""
+        elif (date.minute < 10):
+            startMinute = " OH " + str(date.minute)
+        return " at " + str(startHour) + startMinute + " " + appendingTime
+    return " all day"
 
-		page_token = events.get('nextPageToken')
+#querys google events, expecting start and end to be already converted to google format
+def queryEvents(start, end, keyWords=None):
+    page_token = None
+    myEvents = []
+    while True:
+        # Gets events from primary calender from each page in present day boundaries
+        events = service.events().list(calendarId='primary', pageToken=page_token, timeMin=start, timeMax=end, q=keyWords, singleEvents=True).execute()
+        myEvents.extend(events['items'])
+        page_token = events.get('nextPageToken')
+        if not page_token:
+            break
+    return myEvents
 
-		if not page_token:
-			return
+
 
 # Create a flow object. This object holds the client_id, client_secret, and
 # scope. It assists with OAuth 2.0 steps to get user authorization and
@@ -201,7 +236,7 @@ credentials = storage.get()
 # The new credentials are also stored in the supplied Storage object,
 # which updates the credentials.dat file.
 if credentials is None or credentials.invalid:
-	credentials = run_flow(flow, storage)
+    credentials = run_flow(flow, storage)
 
 # Create an httplib2.Http object to handle our HTTP requests, and authorize it
 # using the credentials.authorize() function.
@@ -218,27 +253,35 @@ http = credentials.authorize(http)
 service = build('calendar', 'v3', http=http)
 
 def handle(text, mic, profile, recursive=False):
-
-	if not text and recursive:
-		mic.say("Okay nevermind then")
-	if bool(re.search(r'\b(Add|Create|Set)\b', text, re.IGNORECASE)):
-		addEvent(profile,mic)
-	elif bool(re.search(r'\bToday\b', text, re.IGNORECASE)):
-		getEventsToday(profile,mic)
-	elif bool(re.search(r'\bTomorrow\b', text, re.IGNORECASE)):
-		getEventsTomorrow(profile,mic)
-	elif bool(re.search(r'\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b', text, re.IGNORECASE)):
-		for day in list(calendar.day_name):
-			if ( re.search(r'\b%s\b' % day, text, re.IGNORECASE) ):
-				getEventsOnNextDayOfWeek(profile, mic, day)
-				break;
-	elif not recursive:
-		mic.say("Did you want to do something with your calendar?")
-		handle( mic.activeListen(), mic, profile, True )
-	else:
-		mic.say("Okay nevermind then")
+    if not text and recursive:
+        mic.say("Okay nevermind then")
+    if bool(re.search(r'\b(Add|Create|Set)\b', text, re.IGNORECASE)):
+        addEvent(profile,mic)
+    elif bool(re.search(r'\bToday\b', text, re.IGNORECASE)):
+        getEventsToday(profile,mic)
+    elif bool(re.search(r'\bTomorrow\b', text, re.IGNORECASE)):
+        getEventsTomorrow(profile,mic)
+    elif bool(re.search(r'\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b', text, re.IGNORECASE)):
+        for day in list(calendar.day_name):
+            if ( re.search(r'\b%s\b' % day, text, re.IGNORECASE) ):
+                getEventsOnNextDayOfWeek(profile, mic, day)
+                break;
+    elif bool(re.search(r'\b(Search)\b', text, re.IGNORECASE)):
+        if bool(re.search(r'\b(calendar for)\b', text, re.IGNORECASE)):
+            text = text.lower().replace("search calendar for","")
+            if len(str.strip(text)) > 0:
+                mic.say("I am searching for " + text)
+                getEventsBySummary( profile, mic, text )
+                return
+        mic.say("What events would you like to search for?")
+        getEventsBySummary( profile, mic, mic.activeListen() )
+    elif not recursive:
+        mic.say("Did you want to do something with your calendar?")
+        handle( mic.activeListen(), mic, profile, True )
+    else:
+        mic.say("Okay nevermind then")
 
 
 
 def isValid(text):
-	return bool(re.search(r'\bCalendar\b', text, re.IGNORECASE))
+    return bool(re.search(r'\bCalendar\b', text, re.IGNORECASE))
