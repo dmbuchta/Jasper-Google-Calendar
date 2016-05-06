@@ -200,7 +200,10 @@ def queryEvents(start, end, keyWords=None):
     myEvents = []
     while True:
         # Gets events from primary calender from each page in present day boundaries
-        events = service.events().list(calendarId='primary', pageToken=page_token, timeMin=start, timeMax=end, q=keyWords, singleEvents=True).execute()
+        if not keyWords:
+            events = service.events().list(calendarId='primary', pageToken=page_token, timeMin=start, timeMax=end, singleEvents=True, orderBy="startTime").execute()
+        else:
+            events = service.events().list(calendarId='primary', pageToken=page_token, timeMin=start, timeMax=end, q=keyWords, singleEvents=True, orderBy="startTime").execute()
         myEvents.extend(events['items'])
         page_token = events.get('nextPageToken')
         if not page_token:
@@ -268,7 +271,7 @@ def handle(text, mic, profile, recursive=False):
                 break;
     elif bool(re.search(r'\b(Search)\b', text, re.IGNORECASE)):
         if bool(re.search(r'\b(calendar for)\b', text, re.IGNORECASE)):
-            text = text.lower().replace("search calendar for","")
+            text = str(text).lower().replace("search calendar for","")
             if len(str.strip(text)) > 0:
                 mic.say("I am searching for " + text)
                 getEventsBySummary( profile, mic, text )
