@@ -56,7 +56,7 @@ def convertGoogleDateStr( dateStr, tz ):
     return date.astimezone( tz )
 
 
-def addEvent(profile, mic):
+def addEvent(profile, mic, service):
 
     while True:
         try:
@@ -104,19 +104,19 @@ def addEvent(profile, mic):
                 return
 
 #gets all events today
-def getEventsToday(profile, mic):
+def getEventsToday(profile, mic, service):
     tz = getTimezone(profile)
     d = datetime.datetime.now(tz=tz)
-    getEventsOn(d, tz, mic, "today")
+    getEventsOn(d, tz, mic, "today", service)
 
 #gets all events tomorrow
-def getEventsTomorrow(profile, mic):
+def getEventsTomorrow(profile, mic, service):
     tz = getTimezone(profile)
     d = datetime.datetime.now(tz=tz) + datetime.timedelta(days=1)
-    getEventsOn(d, tz, mic, "tomorrow")
+    getEventsOn(d, tz, mic, "tomorrow", service)
 
 #gets all events on the provided next day of week (Monday, Tuesday, etc..)
-def getEventsOnNextDayOfWeek(profile, mic, dayOfWeekStr ):
+def getEventsOnNextDayOfWeek(profile, mic, dayOfWeekStr, service ):
     tz = getTimezone(profile)
     d = datetime.datetime.now(tz=tz)
     dayOfWeek = list(calendar.day_name).index(dayOfWeekStr)
@@ -126,11 +126,11 @@ def getEventsOnNextDayOfWeek(profile, mic, dayOfWeekStr ):
         timediff = datetime.timedelta(days=(7-dayOfWeek))
     else:
         timediff = datetime.timedelta(days=(dayOfWeek-d.weekday()))
-    getEventsOn(d+timediff, tz, mic, "next " + dayOfWeekStr)
+    getEventsOn(d+timediff, tz, mic, "next " + dayOfWeekStr, service)
 
 #gets all events on the provided day
-def getEventsOn( day, tz, mic, keyword ):
-    events = queryEvents(convertDateToGoogleStr(tz, getStartOfDay(day)), convertDateToGoogleStr(tz, getEndOfDay(day)))
+def getEventsOn( day, tz, mic, keyword, service ):
+    events = queryEvents(convertDateToGoogleStr(tz, getStartOfDay(day)), convertDateToGoogleStr(tz, getEndOfDay(day)), service)
     if(len(events) == 0):
         mic.say(  "You have no events scheduled for " + keyword )
         return
@@ -141,11 +141,11 @@ def getEventsOn( day, tz, mic, keyword ):
         sep = "and "
 
 #gets all events in the next month that contain keywords
-def getEventsBySummary( profile, mic, keyWords ):
+def getEventsBySummary( profile, mic, keyWords, service ):
     tz = getTimezone(profile)
     today = getStartOfDay(datetime.datetime.now(tz=tz))
     oneMonthFromToday = today + relativedelta(months=1)
-    events = queryEvents(convertDateToGoogleStr(tz, today), convertDateToGoogleStr(tz, oneMonthFromToday), keyWords)
+    events = queryEvents(convertDateToGoogleStr(tz, today), convertDateToGoogleStr(tz, oneMonthFromToday), service, keyWords)
 
     if len(events) == 0:
         mic.say("You don't have any events like that")
@@ -195,7 +195,7 @@ def getReadableTimeFromEvent(event, tz):
     return " all day"
 
 #querys google events, expecting start and end to be already converted to google format
-def queryEvents(start, end, keyWords=None):
+def queryEvents(start, end, service, keyWords=None, ):
     page_token = None
     myEvents = []
     while True:
@@ -210,81 +210,79 @@ def queryEvents(start, end, keyWords=None):
             break
     return myEvents
 
-
-
-# Create a flow object. This object holds the client_id, client_secret, and
-# scope. It assists with OAuth 2.0 steps to get user authorization and
-# credentials.
-
-flow = OAuth2WebServerFlow(client_id, client_secret, scope)
-
-
-# Create a Storage object. This object holds the credentials that your
-# application needs to authorize access to the user's data. The name of the
-# credentials file is provided. If the file does not exist, it is
-# created. This object can only hold credentials for a single user, so
-# as-written, this script can only handle a single user.
-storage = Storage('credentials.dat')
-
-# The get() function returns the credentials for the Storage object. If no
-# credentials were found, None is returned.
-credentials = storage.get()
-
-# If no credentials are found or the credentials are invalid due to
-# expiration, new credentials need to be obtained from the authorization
-# server. The oauth2client.tools.run_flow() function attempts to open an
-# authorization server page in your default web browser. The server
-# asks the user to grant your application access to the user's data.
-# If the user grants access, the run_flow() function returns new credentials.
-# The new credentials are also stored in the supplied Storage object,
-# which updates the credentials.dat file.
-if credentials is None or credentials.invalid:
-    credentials = run_flow(flow, storage)
-
-# Create an httplib2.Http object to handle our HTTP requests, and authorize it
-# using the credentials.authorize() function.
-http = httplib2.Http()
-
-http = credentials.authorize(http)
-
-# The apiclient.discovery.build() function returns an instance of an API service
-# object can be used to make API calls. The object is constructed with
-# methods specific to the calendar API. The arguments provided are:
-#   name of the API ('calendar')
-#   version of the API you are using ('v3')
-#   authorized httplib2.Http() object that can be used for API calls
-service = build('calendar', 'v3', http=http)
-
 def handle(text, mic, profile, recursive=False):
     if not text and recursive:
         mic.say("Okay nevermind then")
     if bool(re.search(r'\b(Add|Create|Set)\b', text, re.IGNORECASE)):
-        addEvent(profile,mic)
+        addEvent(profile,mic, getService(profile))
     elif bool(re.search(r'\bToday\b', text, re.IGNORECASE)):
-        getEventsToday(profile,mic)
+        getEventsToday(profile,mic, getService(profile))
     elif bool(re.search(r'\bTomorrow\b', text, re.IGNORECASE)):
-        getEventsTomorrow(profile,mic)
+        getEventsTomorrow(profile,mic, getService(profile))
     elif bool(re.search(r'\b(Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\b', text, re.IGNORECASE)):
         for day in list(calendar.day_name):
             if ( re.search(r'\b%s\b' % day, text, re.IGNORECASE) ):
-                getEventsOnNextDayOfWeek(profile, mic, day)
+                getEventsOnNextDayOfWeek(profile, mic, day, getService(profile))
                 break;
     elif bool(re.search(r'\b(Search)\b', text, re.IGNORECASE)):
         if bool(re.search(r'\b(calendar for)\b', text, re.IGNORECASE)):
             text = str(text).lower().replace("search calendar for","")
             if len(str.strip(text)) > 0:
                 mic.say("I am searching for " + text)
-                getEventsBySummary( profile, mic, text )
+                getEventsBySummary( profile, mic, text, getService(profile) )
                 return
         mic.say("What events would you like to search for?")
-        getEventsBySummary( profile, mic, mic.activeListen() )
+        getEventsBySummary( profile, mic, mic.activeListen(), getService(profile) )
     elif not recursive:
         mic.say("Did you want to do something with your calendar?")
         handle( mic.activeListen(), mic, profile, True )
     else:
         mic.say("Okay nevermind then")
 
+def getService(profile):
+    client_id = profile["google_calendar"]["id"]
+    client_secret = profile["google_calendar"]["secret"]
 
+    # Create a flow object. This object holds the client_id, client_secret, and
+    # scope. It assists with OAuth 2.0 steps to get user authorization and
+    # credentials.
+    flow = OAuth2WebServerFlow(client_id, client_secret, scope)
+
+
+    # Create a Storage object. This object holds the credentials that your
+    # application needs to authorize access to the user's data. The name of the
+    # credentials file is provided. If the file does not exist, it is
+    # created. This object can only hold credentials for a single user, so
+    # as-written, this script can only handle a single user.
+    storage = Storage('credentials.dat')
+
+    # The get() function returns the credentials for the Storage object. If no
+    # credentials were found, None is returned.
+    credentials = storage.get()
+
+    # If no credentials are found or the credentials are invalid due to
+    # expiration, new credentials need to be obtained from the authorization
+    # server. The oauth2client.tools.run_flow() function attempts to open an
+    # authorization server page in your default web browser. The server
+    # asks the user to grant your application access to the user's data.
+    # If the user grants access, the run_flow() function returns new credentials.
+    # The new credentials are also stored in the supplied Storage object,
+    # which updates the credentials.dat file.
+    if credentials is None or credentials.invalid:
+        credentials = run_flow(flow, storage)
+
+    # Create an httplib2.Http object to handle our HTTP requests, and authorize it
+    # using the credentials.authorize() function.
+    http = httplib2.Http()
+    http = credentials.authorize(http)
+
+    # The apiclient.discovery.build() function returns an instance of an API service
+    # object can be used to make API calls. The object is constructed with
+    # methods specific to the calendar API. The arguments provided are:
+    #   name of the API ('calendar')
+    #   version of the API you are using ('v3')
+    #   authorized httplib2.Http() object that can be used for API calls
+    return build('calendar', 'v3', http=http)
 
 def isValid(text):
     return bool(re.search(r'\bCalendar\b', text, re.IGNORECASE))
