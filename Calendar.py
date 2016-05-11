@@ -21,19 +21,6 @@ from oauth2client.tools import *
 FLAGS = gflags.FLAGS
 WORDS = [ "Calendar", "Events", "Check", "My" ]
 
-monthDict = {'January': '01', 
-        'February': '02',
-        'March': '03',
-        'April': '04',
-        'May': '05',
-        'June': '06',
-        'July': '07',
-        'August': '08',
-        'September': '09',
-        'October': '10',
-        'November': '11',
-        'December': '12'}
-
 # The scope URL for read/write access to a user's calendar data
 scope = 'https://www.googleapis.com/auth/calendar'
 if bool(re.search('--noauth_local_webserver', str(sys.argv), re.IGNORECASE)):
@@ -61,37 +48,15 @@ def addEvent(profile, mic, service):
             mic.say("What would you like to add?")
             eventData = mic.activeListen()
             createdEvent = service.events().quickAdd(calendarId='primary', text=eventData).execute()
-            eventRawStartTime = createdEvent['start']
-
-            m = re.search('([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2}):([0-9]{2})', str(eventRawStartTime))
-            eventDateYear = str(m.group(1))
-            eventDateMonth = str(m.group(2))
-            eventDateDay = str(m.group(3))
-            eventTimeHour = str(m.group(4))
-            eventTimeMinute =  str(m.group(5))
-            appendingTime = "am"
-
-            if len(eventTimeMinute) == 1:
-                eventTimeMinute = eventTimeMinute + "0"
-
-            eventTimeHour = int(eventTimeHour)
-
-            if ((eventTimeHour - 12) > 0 ):
-                    eventTimeHour = eventTimeHour - 12
-                    appendingTime = "pm"
-
-            dictKeys = [ key for key, val in monthDict.items() if val==eventDateMonth ]
-            eventDateMonth = dictKeys[0]
-            mic.say("Added event " + createdEvent['summary'] + " on " + str(eventDateMonth) + " " + str(eventDateDay) + " at " + str(eventTimeHour) + ":" + str(eventTimeMinute) + " " + appendingTime)
+            mic.say("Added event " + createdEvent['summary'] + " on " + getReadableDateFromEvent(createdEvent, getTimezone(profile)) +
+                    " " + getReadableTimeFromEvent(createdEvent, getTimezone(profile)))
             mic.say("Is this what you wanted?")
-            userResponse = mic.activeListen()
-
-            if bool(re.search('Yes', userResponse, re.IGNORECASE)):
-                mic.say("Okay, I added it to your calendar")
-                return
-
-            service.events().delete(calendarId='primary', eventId=createdEvent['id']).execute()
-
+            if bool(re.search(r'\bYes\b', mic.activeListen(), re.IGNORECASE)):
+                mic.say("Okay, it's on your calendar")
+            else:
+                mic.say("My mistake, english is my second language.")
+                service.events().delete(calendarId='primary', eventId=createdEvent['id']).execute()
+            return
         except KeyError:
 
             mic.say("Could not add event to your calender; check if internet issue.")
