@@ -4,6 +4,7 @@ import datetime
 import re
 import gflags
 import calendar
+import jasperpath
 
 from client.app_utils import getTimezone
 from dateutil import tz
@@ -174,6 +175,7 @@ def queryEvents(start, end, service, keyWords=None, ):
     return myEvents
 
 def handle(text, mic, profile, recursive=False):
+    print ("****")
     if not text and recursive:
         mic.say("Okay nevermind then")
     if bool(re.search(r'\b(Add|Create|Set)\b', text, re.IGNORECASE)):
@@ -203,8 +205,11 @@ def handle(text, mic, profile, recursive=False):
         mic.say("Okay nevermind then")
 
 def getService(profile):
+    print ("TESTTEST")
     client_id = profile["google_calendar"]["id"]
     client_secret = profile["google_calendar"]["secret"]
+
+    print ("TEST")
 
     # Create a flow object. This object holds the client_id, client_secret, and
     # scope. It assists with OAuth 2.0 steps to get user authorization and
@@ -217,7 +222,11 @@ def getService(profile):
     # credentials file is provided. If the file does not exist, it is
     # created. This object can only hold credentials for a single user, so
     # as-written, this script can only handle a single user.
-    storage = Storage('credentials.dat')
+
+    print( jasperpath.config('calendar/credentials.dat') )
+
+    storage = Storage(jasperpath.config('calendar/credentials.dat'))
+    # storage = Storage('credentials.dat')
 
     # The get() function returns the credentials for the Storage object. If no
     # credentials were found, None is returned.
@@ -248,4 +257,5 @@ def getService(profile):
     return build('calendar', 'v3', http=http)
 
 def isValid(text):
+    print("IS VALUD????")
     return bool(re.search(r'\bCalendar\b', text, re.IGNORECASE))
