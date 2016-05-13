@@ -3,11 +3,12 @@ Jasper-Google-Calendar
 
 Jasper Google Calendar Module
 
-Written By: Marc Poul Joseph Laventure
+Written By: Dan Buchta
+Originally By: Marc Poul Joseph Laventure
 
 ##Steps to install Google Calendar
 
-* Install/run the following in your home directory
+* Install the following dependencies:
 ```
 sudo pip install httplib2
 sudo pip install --upgrade google-api-python-client
@@ -16,7 +17,7 @@ sudo easy_install --upgrade python-gflags
 * run the following commands in order:
 ```
 git clone https://github.com/marclave/Jasper-Google-Calendar.git
-cp Jasper-Google-Calendar/Calendar.py <path to ..client/jasper.modules>
+ln -s Jasper-Google-Calendar/Calendar.py <path to ..client/jasper.modules>/Calendar.py
 ```
 * Login to [Google developer Console](https://console.developers.google.com/project) and complete the following
 * The Client ID in Google needs to be for a native application.
@@ -26,30 +27,25 @@ In the sidebar on the left, select APIs & auth. In the list of APIs, make sure t
 In the sidebar on the left, select Credentials.
 Get Client ID and Client Secret (Save for later)
 ```
-* Open Calendar.py and add Client ID and Client secret to appropriate variables
+* Open profile.yml (should be at ~/.jasper/profile.yml) and add the following lines:
+```
+google_calendar:
+  id: XXXXXXXXXXXXXXXXXXXXXXXX.apps.googleusercontent.com
+  secret: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+```
+* You will need authenitcate in a browser the first time you run the module
+* If you are using a terminal you will need to take the additional steps:
+  * Add these this line to jasper.py
+  ```
+  parser.add_argument('--noauth_local_webserver', action='store_true', help='Allow configuration for Calendar Module')
+  ```
+  * Then when you start jasper provide the --noauth_local_webserver param
+  ```
+  ./jasper.py --noauth_local_webserver
+  ```
+  * You will then be provided with a link, go to it and follow the rest of the steps to enter your verification code
+  * After the first time authenicating you can remove the changes to jasper.py if you'd like. You should never have to do that again.
 
-* Kill Jasper the following will return all processes of jasper that are running:
-```
-ps ax | grep jasper 
-```
-* Then run(Where <pid> is the PID of each process from the previous command):
-```
-sudo kill <pid>
-```
-* Restart Jasper from Terminal on the Pi (i.e. don't SSH in)
-```
-./jasper.py
-```
-* This should then open a web browser asking you to accept the authentication request. Accept it.
-* Once accepted, Jasper will start up as normal.
-* Add the following to the __init.py file in the ~/jasper/client directory
-```
-from modules import Calendar
-```
-* Restart the Pi:
-```
-sudo reboot
-```
 ##Congrats, JASPER Google Calendar is now installed and ready for use; here are some examples:
 ```
 YOU: Add Calendar event
