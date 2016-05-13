@@ -4,6 +4,7 @@ Jasper-Google-Calendar
 Jasper Google Calendar Module
 
 Written By: Dan Buchta
+
 Originally By: Marc Poul Joseph Laventure
 
 ##Steps to install Google Calendar
@@ -63,4 +64,5 @@ JASPER: Dinner with erin at 6:00 pm
 ##Contributions from the following awesome debuggers/developers :)
 ```
 @dansinclair25
+@marclave
 ```
