@@ -5,8 +5,6 @@ Jasper Google Calendar Module
 
 Written By: Dan Buchta
 
-Originally By: Marc Poul Joseph Laventure
-
 ##Steps to install Google Calendar
 
 * Install the following dependencies:
