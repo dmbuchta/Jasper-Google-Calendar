@@ -16,7 +16,7 @@ sudo easy_install --upgrade python-gflags
 * run the following commands in order:
 ```
 git clone https://github.com/marclave/Jasper-Google-Calendar.git
-ln -s Jasper-Google-Calendar/Calendar.py <path to ..client/jasper.modules>/Calendar.py
+ln -s <absolute path>/Jasper-Google-Calendar/Calendar.py <absolute path to jasper/client/modules>/Calendar.py
 ```
 * Login to [Google developer Console](https://console.developers.google.com/project) and complete the following
 * The Client ID in Google needs to be for a native application.

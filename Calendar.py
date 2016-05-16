@@ -257,5 +257,4 @@ def getService(profile):
     return build('calendar', 'v3', http=http)
 
 def isValid(text):
-    print("IS VALUD????")
     return bool(re.search(r'\bCalendar\b', text, re.IGNORECASE))
