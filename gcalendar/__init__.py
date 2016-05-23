@@ -1,0 +1,1 @@
+from .gcalendar import CalendarPlugin

@@ -1,0 +1,10 @@
+[Plugin]
+Name = gcalendar
+Version = 1.0.0
+License = MIT
+URL = https://github.com/dmbuchta/jasper-calenadr
+Description = Search through your google calendar for upcoming events
+
+[Author]
+Name = Dan Buchta
+URL = https://github.com/dmbuchta

@@ -1,0 +1,109 @@
+# Jasper Calendar Plugin
+# Copyright (C) 2016 Dan Buchta
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: Jasper 2.0\n"
+"Report-Msgid-Bugs-To: https://github.com/dmbuchta/jasper-calendar/issues\n"
+"POT-Creation-Date: 2016-05-22\n"
+"PO-Revision-Date: 2016-05-22\n"
+"Last-Translator: Dan Buchta\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "CALENDAR"
+msgstr ""
+
+msgid "ADD"
+msgstr ""
+
+msgid "CREATE"
+msgstr ""
+
+msgid "SET"
+msgstr ""
+
+msgid "TODAY"
+msgstr ""
+
+msgid "TOMORROW"
+msgstr ""
+
+msgid "AND"
+msgstr ""
+
+msgid "ON"
+msgstr ""
+
+msgid "Monday"
+msgstr ""
+
+msgid "Tuesday"
+msgstr ""
+
+msgid "Wednesday"
+msgstr ""
+
+msgid "Thursday"
+msgstr ""
+
+msgid "Friday"
+msgstr ""
+
+msgid "Saturday"
+msgstr ""
+
+msgid "Sunday"
+msgstr ""
+
+msgid "What would you like to add?"
+msgstr ""
+
+msgid "Is this what you wanted?"
+msgstr ""
+
+msgid "My mistake, english is my second language."
+msgstr ""
+
+msgid "For some reason I am having trouble doing that."
+msgstr ""
+
+msgid "Okay, it's on your calendar"
+msgstr ""
+
+msgid "Added event {summary} on {date} {time}"
+msgstr ""
+
+msgid "Would you like to do something with your calendar?"
+msgstr ""
+
+msgid "Is there anything else you would like to do?"
+msgstr ""
+
+msgid "Alright then"
+msgstr ""
+
+msgid "You have no events scheduled for {keyword}"
+msgstr ""
+
+msgid "You don't have any events like that"
+msgstr ""
+
+msgid "all day"
+msgstr ""
+
+msgid "at"
+msgstr ""
+
+msgid "am"
+msgstr ""
+
+msgid "pm"
+msgstr ""
+
+msgid "next"
+msgstr ""
+
