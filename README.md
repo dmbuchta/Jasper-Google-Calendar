@@ -17,7 +17,7 @@ sudo easy_install --upgrade python-gflags
 ```
 * run the following commands in order:
 ```
-git clone https://github.com/marclave/Jasper-Google-Calendar.git
+git clone https://github.com/dmbuchta/jasper-calendar.git
 cp jasper-calendar/gcalendar <path to jasper>/plugins/speechhandler/
 ```
 * Login to [Google developer Console](https://console.developers.google.com/project) and complete the following
