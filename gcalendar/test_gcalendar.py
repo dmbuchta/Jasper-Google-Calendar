@@ -25,18 +25,26 @@ class TestCalendarPlugin(unittest.TestCase):
         self.assertTrue(self.plugin.is_valid("Search Calendar for flight"))
         self.assertFalse(self.plugin.is_valid("What time is it?"))
 
+    @unittest.skipIf(not diagnose.check_network_connection(),
+                     "No internet connection")
     def test_get_todays_events(self):
         mic = testutils.TestMic()
         self.plugin.get_todays_events(mic)
 
+    @unittest.skipIf(not diagnose.check_network_connection(),
+                     "No internet connection")
     def test_get_tomorrows_events(self):
         mic = testutils.TestMic()
         self.plugin.get_tomorrows_events(mic)
 
+    @unittest.skipIf(not diagnose.check_network_connection(),
+                     "No internet connection")
     def test_get_tomorrows_events(self):
         mic = testutils.TestMic()
         self.plugin.get_tomorrows_events(mic)
 
+    @unittest.skipIf(not diagnose.check_network_connection(),
+                     "No internet connection")
     def test_handle_events_by_day_of_week(self):
         inputs = ["What do I have on Monday", "What do I have on Tuesday",
                   "What do I have on Wednesday", "What do I have on Thursday",
@@ -58,11 +66,15 @@ class TestCalendarPlugin(unittest.TestCase):
                 self.assertTrue(type(
                     output) == list or "You have no events scheduled for next" in output)
 
+    @unittest.skipIf(not diagnose.check_network_connection(),
+                     "No internet connection")
     def test_adding_and_then_cancelling(self):
         inputs = ["Dentist Tomorrow at 10 pm", "cancel"]
         mic = testutils.TestMic(inputs)
         self.plugin.handle("Add Event", mic)
 
+    @unittest.skipIf(not diagnose.check_network_connection(),
+                     "No internet connection")
     def test_handle_searching_calendar(self):
         mic = testutils.TestMic()
         self.plugin.handle("Search Calendar for Flight", mic)
